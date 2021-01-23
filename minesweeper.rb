@@ -1,8 +1,8 @@
 class Minesweeper
 	MINES_PERSENTAGE = {
-		easy: 0.1,
-		medium: 0.3,
-		hard: 0.5
+		easy: 0.1, # 10% mines on board
+		medium: 0.3, # 30% mines on board
+		hard: 0.5 # 50% mines on board
 	}
 	# Function initialize , initialize game
 	def initialize(size=4, level=:easy)
@@ -29,7 +29,7 @@ class Minesweeper
 	#Function flag, flag a square at scesific coordinates as a mine 
 	def flag(x,y)
 		return "Unable to flag" if @grid[y-1][x-1] != "X"
-		@grid[x-1][y-1] = "f"
+		@grid[y-1][x-1] = "f"
 	end
 	#Function unflag, unflag a square at scesific coordinates
 	def unflag(x,y)
@@ -113,10 +113,12 @@ class Minesweeper
 		#bottom
 		surrounding_square_positions.push(coordinates_to_position(current_column, current_row+1)) unless current_row == @size
 
+		# check sarounding positions against @mines Array
 		surrounding_square_mines = surrounding_square_positions&@mines
 
 		@grid[y-1][x-1] = surrounding_square_mines.size
-		if @grid.flatten.count("X") == @total_mines
+		#check if there are the hidden squares are only mines
+		if @grid.flatten.count("X")+@grid.flatten.count("f") == @total_mines
 			@status_ = :victory
 			return "You won"
 		end
