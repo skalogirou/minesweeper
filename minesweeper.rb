@@ -16,11 +16,11 @@ class Minesweeper
 	#Function attempt, try to open a square at scesific coordinates
 	def attempt(x,y)
 		return "This game is over" if @status_!= :in_progress
-		return "Invalid coordinate!" if x > @size or y > @size
-		return "Already opened!" unless @grid[x-1][y-1].is_a?(String)
+		return "Invalid coordinate!" if x > @size or y > @size or x <= 0 or y <=0
+		return "Already opened!" unless @grid[y-1][x-1].is_a?(String)
 		if  is_a_mine?(x,y)
 			@status_ = :loss
-			@grid[x-1][y-1] = "*"
+			@grid[y-1][x-1] = "*"
 			return "BOOOOM!"
 		else
 			calculate(x,y)
@@ -28,20 +28,20 @@ class Minesweeper
 	end
 	#Function flag, flag a square at scesific coordinates as a mine 
 	def flag(x,y)
-		return "Unable to flag" if @grid[x-1][y-1] != "X"
+		return "Unable to flag" if @grid[y-1][x-1] != "X"
 		@grid[x-1][y-1] = "f"
 	end
 	#Function unflag, unflag a square at scesific coordinates
 	def unflag(x,y)
-		return "This square was not flaged!" if @grid[x-1][y-1] != "f"
-		@grid[x-1][y-1] = "X" 
+		return "This square was not flaged!" if @grid[y-1][x-1] != "f"
+		@grid[y-1][x-1] = "X" 
 	end
 	# Function display, return a view of the board
 	def display
-		@grid.each do |y_array|
+		@grid.each do |x_array|
 			_display=""
-			y_array.each do |y|
-				_display+="#{y}"
+			x_array.each do |x|
+				_display+="#{x}"
 			end
 			puts _display
 		end
@@ -52,7 +52,9 @@ class Minesweeper
 		# Convert coordinates to position
 		#Starting position 1 -> Coordinates (1,1) 
 		#Ending position Size*Size -> Coordinates(Size,Size)
-		_position = (x-1)*@size + y 
+		_position = coordinates_to_position(x,y) 
+		#show position for debug purposes
+		#p _position
 		return @mines.include?(_position) # Check the _position against the @mines Array
 	end
 	# Function status returns the status of the game
@@ -65,7 +67,13 @@ class Minesweeper
 			return "Still playing"
 		end
 	end
-
+	# Functions for debug purposes
+	# def grid
+	# 	@grid
+	# end
+	# def mines
+	# 	@mines
+	# end
 	private
 	#Function populate_mines, populating the board with mines
 	#This functions build an array containing the positions of the mines
@@ -80,25 +88,41 @@ class Minesweeper
 	end
 	#Function calculate, calculates the number of mines arround specific position
 	def calculate(x,y)
-		_positions = []
-		if y==1
-			_positions = []
-		elsif y==7
-			_positions = []
-		else
-			_positions = []
+		surrounding_square_positions = []
+		current_row = y
+		current_column = x
+		
+		#left
+		unless current_column == 1
+			surrounding_square_positions.push(coordinates_to_position(current_column-1, current_row))
+			#top left
+			surrounding_square_positions.push(coordinates_to_position(current_column-1, current_row-1)) unless current_row == 1
+			#bottom_left
+			surrounding_square_positions.push(coordinates_to_position(current_column-1, current_row+1)) unless current_row == @size
 		end
-		@grid[x-1][y-1] = 2
-		if @grid.count("X") == @total_mines
+		#right
+		unless current_column == @size
+			surrounding_square_positions.push(coordinates_to_position(current_column+1, current_row))
+			#top right
+			surrounding_square_positions.push(coordinates_to_position(current_column+1, current_row-1)) unless current_row == 1
+			#bottom right
+			surrounding_square_positions.push(coordinates_to_position(current_column+1, current_row+1)) unless current_row == @size
+		end
+		#top
+		surrounding_square_positions.push(coordinates_to_position(current_column, current_row-1)) unless current_row == 1
+		#bottom
+		surrounding_square_positions.push(coordinates_to_position(current_column, current_row+1)) unless current_row == @size
+
+		surrounding_square_mines = surrounding_square_positions&@mines
+
+		@grid[y-1][x-1] = surrounding_square_mines.size
+		if @grid.flatten.count("X") == @total_mines
 			@status_ = :victory
 			return "You won"
 		end
-		return 2
+		return surrounding_square_mines.size
 	end
-	# def grid
-	# 	@grid
-	# end
-	# def mines
-	# 	@mines
-	# end
+	def coordinates_to_position(x,y)
+		return (x-1)*@size + y 
+	end
 end
